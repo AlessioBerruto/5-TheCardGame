@@ -33,7 +33,6 @@ public class CardPoolManager : MonoBehaviour
         suitSprites["heart"] = Resources.LoadAll<Sprite>("Cards/Fronts/heart").ToList();
         suitSprites["diamond"] = Resources.LoadAll<Sprite>("Cards/Fronts/diamond").ToList();
         suitSprites["joker"] = Resources.LoadAll<Sprite>("Cards/Fronts/joker").ToList();
-
         cardBackSprite = Resources.Load<Sprite>("Cards/Back/CardBack");
     }
 
@@ -61,8 +60,7 @@ public class CardPoolManager : MonoBehaviour
             for (int i = 0; i < sprites.Count * 2; i++)
             {
                 int rank = (i % sprites.Count) + 1;
-
-                if (rank == 1) continue; // salta gli assi
+                if (rank == 1) continue;
 
                 GameObject obj = Instantiate(cardPrefab, poolParent);
                 obj.transform.localScale = Vector3.one;
@@ -103,8 +101,7 @@ public class CardPoolManager : MonoBehaviour
 
     public List<Card> GetAllNonAceCards()
     {
-        List<Card> copy = new List<Card>(pool);
-        return copy;
+        return new List<Card>(pool);
     }
 
     public Card GetCard()

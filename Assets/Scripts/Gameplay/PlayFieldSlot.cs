@@ -15,18 +15,14 @@ public class PlayFieldSlot : MonoBehaviour
         }
     }
 
-    public void InitSlotWithAce(Card ace)
+    public void InitSlotWithAce(Card ace, bool isFacingPlayer = true)
     {
+        if (ace == null) return;
         cards.Add(ace);
         ace.Flip(true);
-        ace.transform.SetParent(transform);
+        ace.transform.SetParent(transform, false);
+        ace.transform.localScale = new Vector3(1, isFacingPlayer ? 1 : -1, 1);
         ace.transform.localPosition = Vector3.zero;
-    }
-
-    public List<Card> GetCards()
-    {
-        List<Card> copy = new List<Card>(cards);
-        return copy;
     }
 
     public bool CanPlace(Card card)
@@ -59,11 +55,16 @@ public class PlayFieldSlot : MonoBehaviour
         return Mathf.Clamp(next, 1, 13);
     }
 
-    public void PlaceCard(Card card)
+    public void PlaceCard(Card card, bool isFacingPlayer = true)
     {
         cards.Add(card);
-        card.transform.SetParent(transform);
-        card.transform.localPosition = new Vector3(0, cards.Count * 5f, 0);
+        card.transform.SetParent(transform, false);
+
+        float yOffset = cards.Count * 5f;
+        if (!isFacingPlayer) yOffset = -yOffset;
+
+        card.transform.localPosition = new Vector3(0, yOffset, 0);
+        card.transform.localScale = new Vector3(1, isFacingPlayer ? 1 : -1, 1);
         card.Flip(true);
 
         if (JokerManager.Instance != null)
@@ -77,7 +78,11 @@ public class PlayFieldSlot : MonoBehaviour
             if (card != null)
                 Destroy(card.gameObject);
         }
-
         cards.Clear();
+    }
+
+    public List<Card> GetCards()
+    {
+        return new List<Card>(cards);
     }
 }

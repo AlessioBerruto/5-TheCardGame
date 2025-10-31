@@ -28,15 +28,52 @@ public class PlayFieldManager : MonoBehaviour
             pileZone.InitPile(piles[i]);
             pileZone.transform.SetAsLastSibling();
         }
-
-        Debug.Log("PlayFieldManager: mazzetti di scelta mostrati correttamente.");
     }
 
     public void PlaceStartingAces(List<Card> aces)
     {
-        for (int i = 0; i < fieldSlots.Count && i < aces.Count; i++)
+        List<Card> remaining = new List<Card>(aces);
+
+        for (int i = 0; i < fieldSlots.Count; i++)
         {
-            fieldSlots[i].InitSlotWithAce(aces[i]);
+            PlayFieldSlot slot = fieldSlots[i];
+            string slotName = slot.gameObject.name.ToLower();
+            Card chosen = null;
+
+            for (int j = 0; j < remaining.Count; j++)
+            {
+                if (remaining[j] == null) continue;
+                string suit = remaining[j].Suit.ToLower();
+
+                if (slotName.Contains(suit) || slotName.Contains(suit + "s"))
+                {
+                    chosen = remaining[j];
+                    remaining.RemoveAt(j);
+                    break;
+                }
+            }
+
+            if (chosen == null && remaining.Count > 0)
+            {
+                chosen = remaining[0];
+                remaining.RemoveAt(0);
+            }
+
+            if (chosen != null)
+            {
+                bool isFacingPlayer = slotName.Contains("_e_") || slotName.Contains("_f_") || slotName.Contains("_g_") || slotName.Contains("_h_");
+
+                chosen.transform.SetParent(slot.transform, false);
+                chosen.transform.localScale = Vector3.one;
+                chosen.transform.localPosition = Vector3.zero;
+                chosen.Flip(true);
+
+                if (!isFacingPlayer)
+                    chosen.transform.localScale = new Vector3(1, -1, 1);
+
+                chosen.gameObject.SetActive(true);
+                slot.InitSlotWithAce(chosen, isFacingPlayer);
+            }
         }
     }
 
@@ -76,5 +113,4 @@ public class PlayFieldManager : MonoBehaviour
     {
         return previewPiles;
     }
-
 }

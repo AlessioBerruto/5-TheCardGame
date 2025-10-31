@@ -22,7 +22,7 @@ public class CoveredPile : MonoBehaviour
         card.transform.SetParent(transform, false);
         card.transform.localPosition = new Vector3(0, cards.Count * 2f, 0);
         card.Flip(faceUp);
-        card.gameObject.SetActive(true); 
+        card.gameObject.SetActive(true);
         cards.Push(card);
     }
 
@@ -41,12 +41,13 @@ public class CoveredPile : MonoBehaviour
 
         Card top = cards.Peek();
         top.Flip(true);
+
+        CardDragHandler dragHandler = top.GetComponent<CardDragHandler>();
+        if (dragHandler != null)
+            dragHandler.SetDraggable(true);
     }
 
-    public int Count
-    {
-        get { return cards.Count; }
-    }
+    public int Count => cards.Count;
 
     public void ClearPile()
     {

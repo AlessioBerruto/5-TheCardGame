@@ -2733,6 +2733,7 @@ MonoBehaviour:
   aiHandZone: {fileID: 1195176987}
   cardSpacing: 100
   rotationAmount: 8
+  maxYOffset: 20
 --- !u!4 &1013283547
 Transform:
   m_ObjectHideFlags: 0
@@ -2939,17 +2940,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1139100543166408409, guid: e0facda2cff04174fa25e7694bf6199e, type: 3}
   m_PrefabInstance: {fileID: 4224154328626263758}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1163818701 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5650280870577869406, guid: e0facda2cff04174fa25e7694bf6199e, type: 3}
-  m_PrefabInstance: {fileID: 4224154328626263758}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66b7089d0d670a342baad9dbfdaf1505, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1185356791
 GameObject:
   m_ObjectHideFlags: 0
@@ -3110,9 +3100,9 @@ MonoBehaviour:
   - {fileID: 585314942}
   - {fileID: 795758124}
   - {fileID: 2089853708}
-  mainDeck: {fileID: 1163818701}
+  mainDeck: {fileID: 0}
   sidePileManager: {fileID: 699086183}
-  discardPile: {fileID: 761840404}
+  discardPile: {fileID: 0}
   handManager: {fileID: 1013283546}
 --- !u!224 &1195176987 stripped
 RectTransform:
@@ -5003,6 +4993,9 @@ MonoBehaviour:
   playFieldManager: {fileID: 1193163770}
   playerPickManager: {fileID: 954612087}
   turnManager: {fileID: 1967797779}
+  mainDeckVisualParent: {fileID: 1163818700}
+  maxVisibleDeckCards: 20
+  cardOffsetY: 2
 --- !u!1 &1951890027
 GameObject:
   m_ObjectHideFlags: 0
@@ -5868,19 +5861,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6497990872548486016, guid: a66abe12b98b13041a8d3c4e5c4607b7, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.999962
       objectReference: {fileID: 0}
     - target: {fileID: 6497990872548486016, guid: a66abe12b98b13041a8d3c4e5c4607b7, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6497990872548486016, guid: a66abe12b98b13041a8d3c4e5c4607b7, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6497990872548486016, guid: a66abe12b98b13041a8d3c4e5c4607b7, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0.008726558
       objectReference: {fileID: 0}
     - target: {fileID: 6497990872548486016, guid: a66abe12b98b13041a8d3c4e5c4607b7, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -5900,7 +5893,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6497990872548486016, guid: a66abe12b98b13041a8d3c4e5c4607b7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8733481477556285238, guid: a66abe12b98b13041a8d3c4e5c4607b7, type: 3}
       propertyPath: m_Name
@@ -6197,7 +6190,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: MainDeck
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7980611920920916329, guid: e0facda2cff04174fa25e7694bf6199e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5650280870577869406, guid: e0facda2cff04174fa25e7694bf6199e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -6357,15 +6355,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3725345984945268148, guid: 8ea17bc2d6f30b14fbcc8bddbb429acc, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3725345984945268148, guid: 8ea17bc2d6f30b14fbcc8bddbb429acc, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3725345984945268148, guid: 8ea17bc2d6f30b14fbcc8bddbb429acc, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3725345984945268148, guid: 8ea17bc2d6f30b14fbcc8bddbb429acc, type: 3}
       propertyPath: m_AnchoredPosition.x

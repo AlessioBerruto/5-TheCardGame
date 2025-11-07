@@ -1,70 +1,45 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
-using UnityEditor;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-
-[ExecuteAlways]
 public class DiscardPile : MonoBehaviour
 {
-    private Stack<Card> discardedCards = new Stack<Card>();
-    private Card topCard;   
+    private List<Card> cards = new List<Card>();
 
     public void AddCard(Card card)
     {
         if (card == null) return;
 
-        card.transform.SetParent(transform);
+        cards.Add(card);
+        card.transform.SetParent(transform, false);
         card.transform.localPosition = Vector3.zero;
+        card.transform.localRotation = Quaternion.identity;
+        card.transform.localScale = Vector3.one;
         card.Flip(true);
-        discardedCards.Push(card);
-
-        UpdateTopCard();
-    }
-
-    private void UpdateTopCard()
-    {
-        foreach (Card c in discardedCards)
-        {
-            c.gameObject.SetActive(false);
-        }
-
-        if (discardedCards.Count > 0)
-        {
-            topCard = discardedCards.Peek();
-            topCard.gameObject.SetActive(true);
-            topCard.transform.SetAsLastSibling();
-        }
-        else
-        {
-            topCard = null;
-        }
+        card.gameObject.SetActive(true);
+        card.transform.SetAsLastSibling(); 
     }
 
     public Card GetTopCard()
     {
-        return topCard;
+        if (cards.Count == 0)
+            return null;
+        return cards[cards.Count - 1];
     }
 
-    public Card TakeTopCard()
+    public List<Card> GetAllCards()
     {
-        if (discardedCards.Count == 0) return null;
-        Card taken = discardedCards.Pop();
-        UpdateTopCard();
-        return taken;
-    }
-
-    public int Count
-    {
-        get { return discardedCards.Count; }
+        return new List<Card>(cards);
     }
 
     public void ClearPile()
     {
-        foreach (Card c in discardedCards)
+        foreach (Card card in cards)
         {
-            c.ResetCard();
+            if (card != null)
+                card.gameObject.SetActive(false);
         }
-        discardedCards.Clear();
-        topCard = null;
+        cards.Clear();
     }
+
+    public int Count => cards.Count;
 }

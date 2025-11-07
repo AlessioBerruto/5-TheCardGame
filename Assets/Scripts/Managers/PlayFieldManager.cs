@@ -5,16 +5,12 @@ public class PlayFieldManager : MonoBehaviour
 {
     [SerializeField] private List<PlayFieldSlot> fieldSlots = new List<PlayFieldSlot>();
     [SerializeField] private List<CoveredPile> previewPiles = new List<CoveredPile>();
-    [SerializeField] private CoveredPile mainDeck;
     [SerializeField] private SidePileManager sidePileManager;
     [SerializeField] private DiscardPile discardPile;
     [SerializeField] private HandManager handManager;
 
     public void ShowPreviewPiles(List<List<Card>> piles)
     {
-        if (mainDeck != null)
-            mainDeck.gameObject.SetActive(false);
-
         if (previewPiles.Count < piles.Count)
         {
             Debug.LogWarning("Numero di previewPiles inferiore al numero di mazzetti!");
@@ -61,21 +57,24 @@ public class PlayFieldManager : MonoBehaviour
 
             if (chosen != null)
             {
-                bool isFacingPlayer = slotName.Contains("_e_") || slotName.Contains("_f_") || slotName.Contains("_g_") || slotName.Contains("_h_");
+                bool isTopRow = slot.transform.position.y > 0f;
 
                 chosen.transform.SetParent(slot.transform, false);
                 chosen.transform.localScale = Vector3.one;
                 chosen.transform.localPosition = Vector3.zero;
                 chosen.Flip(true);
 
-                if (!isFacingPlayer)
-                    chosen.transform.localScale = new Vector3(1, -1, 1);
+                if (isTopRow)
+                    chosen.transform.localRotation = Quaternion.Euler(0, 0, 180);
+                else
+                    chosen.transform.localRotation = Quaternion.identity;
 
                 chosen.gameObject.SetActive(true);
-                slot.InitSlotWithAce(chosen, isFacingPlayer);
+                slot.InitSlotWithAce(chosen, !isTopRow);
             }
         }
     }
+
 
     public void InitHands(List<Card> playerCards, List<Card> aiCards)
     {
@@ -85,13 +84,6 @@ public class PlayFieldManager : MonoBehaviour
     public void InitSidePiles(List<Card> playerPile, List<Card> aiPile)
     {
         sidePileManager.SetupSidePiles(playerPile, aiPile);
-    }
-
-    public void InitDeck(List<Card> deckCards)
-    {
-        mainDeck.InitPile(deckCards);
-        mainDeck.gameObject.SetActive(true);
-        mainDeck.transform.SetAsLastSibling();
     }
 
     public void InitDiscardPile()
@@ -104,7 +96,6 @@ public class PlayFieldManager : MonoBehaviour
         foreach (PlayFieldSlot slot in fieldSlots)
             slot.ClearSlot();
 
-        mainDeck.ClearPile();
         discardPile.ClearPile();
         sidePileManager.ClearPiles();
     }

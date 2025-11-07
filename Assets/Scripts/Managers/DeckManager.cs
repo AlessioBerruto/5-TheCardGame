@@ -3,23 +3,21 @@ using UnityEngine;
 
 public class DeckManager : MonoBehaviour
 {
-    [SerializeField] private PlayFieldManager playFieldManager;
-    [SerializeField] private PlayerPickManager playerPickManager;
-    [SerializeField] private TurnManager turnManager;
-    [SerializeField] private Transform mainDeckVisualParent;
-    [SerializeField] private int maxVisibleDeckCards = 20;
-    [SerializeField] private float cardOffsetY = 2f;
+    [SerializeField] PlayFieldManager playFieldManager;
+    [SerializeField] PlayerPickManager playerPickManager;
+    [SerializeField] TurnManager turnManager;
+    [SerializeField] Transform mainDeckVisualParent;
+    [SerializeField] int maxVisibleDeckCards = 20;
+    [SerializeField] float cardOffsetY = -2f;
 
-    private List<Card> mainDeck = new List<Card>();
-    private List<List<Card>> previewPiles = new List<List<Card>>();
-    private List<Card> cachedAces = new List<Card>();
-    private List<Card> visibleCards = new List<Card>();
+    List<Card> mainDeck = new List<Card>();
+    List<List<Card>> previewPiles = new List<List<Card>>();
+    List<Card> cachedAces = new List<Card>();
 
     public void SetupDeck()
     {
         CardPoolManager pool = CardPoolManager.Instance;
         cachedAces = pool.GetAces();
-
         List<Card> allCards = pool.GetAllNonAceCards();
         Shuffle(allCards);
 
@@ -36,7 +34,7 @@ public class DeckManager : MonoBehaviour
         playFieldManager.ShowPreviewPiles(previewPiles);
         playerPickManager.StartPileSelection(previewPiles);
 
-        ClearMainDeckVisual();
+        HideMainDeckVisual();
     }
 
     public void CompleteSetupAfterChoice(int playerPileIndex, int aiPileIndex, int playerHandIndex, int aiHandIndex)
@@ -50,25 +48,37 @@ public class DeckManager : MonoBehaviour
         playFieldManager.InitHands(playerHand, aiHand);
         playFieldManager.InitSidePiles(playerPile, aiPile);
 
+        ShowMainDeckVisual();
         RefreshDeckVisual();
 
         GameManager.Instance.UpdateState(GameManager.GameState.PlayerTurn);
         turnManager.StartTurns();
     }
 
+    void HideMainDeckVisual()
+    {
+        if (mainDeckVisualParent != null) mainDeckVisualParent.gameObject.SetActive(false);
+    }
+
+    void ShowMainDeckVisual()
+    {
+        if (mainDeckVisualParent != null) mainDeckVisualParent.gameObject.SetActive(true);
+    }
+
     public Card DrawCard()
     {
-        if (mainDeck.Count == 0) return null;
-
+        if (mainDeck.Count == 0)
+        {
+            Debug.LogWarning("DeckManager: mazzo principale vuoto!");
+            return null;
+        }
         Card drawn = mainDeck[mainDeck.Count - 1];
         mainDeck.RemoveAt(mainDeck.Count - 1);
-        visibleCards.Remove(drawn);
-
         RefreshDeckVisual();
         return drawn;
     }
 
-    private void Shuffle(List<Card> list)
+    void Shuffle(List<Card> list)
     {
         for (int i = 0; i < list.Count; i++)
         {
@@ -79,36 +89,57 @@ public class DeckManager : MonoBehaviour
         }
     }
 
-    private void ClearMainDeckVisual()
+    void RefreshDeckVisual()
     {
-        foreach (Card c in visibleCards)
-        {
-            if (c != null) c.gameObject.SetActive(false);
-        }
-        visibleCards.Clear();
-    }
-
-    private void RefreshDeckVisual()
-    {
+        if (mainDeckVisualParent == null) return;
         int visibleCount = Mathf.Min(mainDeck.Count, maxVisibleDeckCards);
 
-        for (int i = 0; i < visibleCount; i++)
+        for (int i = 0; i < mainDeck.Count; i++)
         {
-            Card c = mainDeck[mainDeck.Count - 1 - i];
-            if (!visibleCards.Contains(c)) visibleCards.Add(c);
-
+            Card c = mainDeck[i];
+            if (c == null) continue;
             c.transform.SetParent(mainDeckVisualParent, false);
-            c.transform.localPosition = new Vector3(0, i * cardOffsetY, 0);
-            c.transform.localRotation = Quaternion.identity;
+            c.transform.localRotation = Quaternion.Euler(0, 0, 180);
+            c.transform.localScale = Vector3.one;
+            c.transform.localPosition = Vector3.zero;
+            c.transform.SetSiblingIndex(i);
+            bool show = i >= mainDeck.Count - visibleCount;
+            if (show)
+            {
+                int layerIndexFromTop = (mainDeck.Count - 1) - i;
+                c.transform.localPosition = new Vector3(0, -layerIndexFromTop * cardOffsetY, 0);
+                c.gameObject.SetActive(true);
+                c.Flip(false);
+            }
+            else c.gameObject.SetActive(false);
+        }
+    }
+
+
+    public void RecycleDiscardPile()
+    {
+        DiscardPile discardPile = FindObjectOfType<DiscardPile>();
+        if (discardPile == null) return;
+
+        List<Card> discardedCards = discardPile.GetAllCards();
+        if (discardedCards.Count == 0) return;
+
+        discardPile.ClearPile();
+
+        for (int i = 0; i < discardedCards.Count; i++)
+        {
+            Card c = discardedCards[i];
             c.Flip(false);
-            c.gameObject.SetActive(true);
+            c.transform.SetParent(mainDeckVisualParent, false);
+            c.transform.localRotation = Quaternion.Euler(0, 0, 180);
+            c.transform.localScale = Vector3.one;
+            c.transform.localPosition = Vector3.zero;
+            c.gameObject.SetActive(false);
+            mainDeck.Add(c);
         }
 
-        for (int i = visibleCards.Count - 1; i >= visibleCount; i--)
-        {
-            Card c = visibleCards[i];
-            c.gameObject.SetActive(false);
-            visibleCards.RemoveAt(i);
-        }
+        Shuffle(mainDeck);
+        RefreshDeckVisual();
+        Debug.Log("DeckManager: scarti riciclati nel mazzo principale (" + discardedCards.Count + " carte).");
     }
 }

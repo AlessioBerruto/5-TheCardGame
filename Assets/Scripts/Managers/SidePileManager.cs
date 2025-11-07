@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class SidePileManager : MonoBehaviour
 {
-    [SerializeField] private CoveredPile playerPile;
-    [SerializeField] private CoveredPile aiPile;
+    [SerializeField] CoveredPile playerPile;
+    [SerializeField] CoveredPile aiPile;
 
     public void SetupSidePiles(List<Card> playerCards, List<Card> aiCards)
     {
@@ -14,24 +14,42 @@ public class SidePileManager : MonoBehaviour
 
     public void RevealPlayerTop()
     {
-        playerPile.RevealTopCard();
+        if (!playerPile.IsEmpty)
+            playerPile.RevealTopCard();
+    }
+
+    public void RevealAITop()
+    {
+        if (!aiPile.IsEmpty)
+            aiPile.RevealTopCard();
     }
 
     public void OnPlayerCardPlayedFromPile()
     {
-        playerPile.RevealTopCard();
+        if (!playerPile.IsEmpty)
+            playerPile.RevealTopCard();
+    }
+
+    public void OnAICardPlayedFromPile()
+    {
+        if (!aiPile.IsEmpty)
+            aiPile.RevealTopCard();
     }
 
     public bool IsPlayerPileEmpty()
     {
-        return playerPile.Count == 0;
+        return playerPile.IsEmpty;
+    }
+
+    public bool IsAIPileEmpty()
+    {
+        return aiPile.IsEmpty;
     }
 
     public void ClearPiles()
     {
         if (playerPile != null)
             playerPile.ClearPile();
-
         if (aiPile != null)
             aiPile.ClearPile();
     }

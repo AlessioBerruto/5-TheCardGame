@@ -21,7 +21,6 @@ public class CardPoolManager : MonoBehaviour
             return;
         }
         Instance = this;
-
         LoadSprites();
         BuildPool();
     }
@@ -38,38 +37,62 @@ public class CardPoolManager : MonoBehaviour
 
     private void BuildPool()
     {
-        foreach (KeyValuePair<string, List<Sprite>> entry in suitSprites)
+        pool.Clear();
+
+        string[] suits = new string[] { "club", "diamond", "heart", "spade" };
+
+        foreach (string suit in suits)
         {
-            string suit = entry.Key;
-            List<Sprite> sprites = entry.Value;
+            List<Sprite> sprites = suitSprites[suit];
+            int ranksCount = sprites.Count;
 
-            if (suit == "joker")
+            for (int copy = 0; copy < 2; copy++)
             {
-                for (int i = 0; i < sprites.Count; i++)
+                for (int i = 0; i < ranksCount; i++)
                 {
-                    GameObject obj = Instantiate(cardPrefab, poolParent);
-                    obj.transform.localScale = Vector3.one;
-                    Card c = obj.GetComponent<Card>();
-                    c.Init(sprites[i], cardBackSprite, "joker", 0, true);
-                    c.gameObject.SetActive(false);
-                    pool.Add(c);
+                    int rank = ParseRankFromSpriteName(sprites[i].name, i + 1);
+                    CreateAndAddCard(suit, sprites[i], rank, false);
                 }
-                continue;
-            }
-
-            for (int i = 0; i < sprites.Count * 2; i++)
-            {
-                int rank = (i % sprites.Count) + 1;
-                if (rank == 1) continue;
-
-                GameObject obj = Instantiate(cardPrefab, poolParent);
-                obj.transform.localScale = Vector3.one;
-                Card c = obj.GetComponent<Card>();
-                c.Init(sprites[i % sprites.Count], cardBackSprite, suit, rank);
-                c.gameObject.SetActive(false);
-                pool.Add(c);
             }
         }
+
+        List<Sprite> jokerSprites = suitSprites["joker"];
+        for (int i = 0; i < jokerSprites.Count; i++)
+            CreateAndAddCard("joker", jokerSprites[i], 0, true);
+
+        foreach (Card c in pool)
+            c.gameObject.SetActive(false);
+    }
+
+    private int ParseRankFromSpriteName(string spriteName, int fallback)
+    {
+        if (string.IsNullOrEmpty(spriteName)) return fallback;
+        string[] parts = spriteName.Split('_');
+        int parsed;
+        if (parts.Length > 0 && int.TryParse(parts[0], out parsed))
+            return parsed;
+        if (spriteName.Length >= 2)
+        {
+            string num = "";
+            for (int i = 0; i < spriteName.Length; i++)
+            {
+                char ch = spriteName[i];
+                if (char.IsDigit(ch)) num += ch;
+                else if (num.Length > 0) break;
+            }
+            if (num.Length > 0 && int.TryParse(num, out parsed)) return parsed;
+        }
+        return fallback;
+    }
+
+
+    private void CreateAndAddCard(string suit, Sprite front, int rank, bool isJoker)
+    {
+        GameObject obj = Instantiate(cardPrefab, poolParent);
+        obj.transform.localScale = Vector3.one;
+        Card c = obj.GetComponent<Card>();
+        c.Init(front, cardBackSprite, suit, rank, isJoker);
+        pool.Add(c);
     }
 
     public List<Card> GetAces()
@@ -79,20 +102,18 @@ public class CardPoolManager : MonoBehaviour
 
         foreach (string suit in suits)
         {
-            Sprite aceSprite = suitSprites[suit].FirstOrDefault(s => s.name == "1_" + suit);
-            if (aceSprite == null)
-            {
-                Debug.LogWarning("Asso non trovato per il seme " + suit);
-                continue;
-            }
-
             for (int i = 0; i < 2; i++)
             {
-                GameObject obj = Instantiate(cardPrefab, poolParent);
-                obj.transform.localScale = Vector3.one;
-                Card c = obj.GetComponent<Card>();
-                c.Init(aceSprite, cardBackSprite, suit, 1);
-                aces.Add(c);
+                Card found = pool.Find(x => x.Suit == suit && x.Rank == 1 && !x.gameObject.activeInHierarchy && !x.IsJoker);
+                if (found != null)
+                {
+                    found.gameObject.SetActive(true);
+                    aces.Add(found);
+                }
+                else
+                {
+                    Debug.LogWarning("CardPoolManager: asso non trovato per seme " + suit);
+                }
             }
         }
 
@@ -101,26 +122,30 @@ public class CardPoolManager : MonoBehaviour
 
     public List<Card> GetAllNonAceCards()
     {
-        return new List<Card>(pool);
+        List<Card> copy = pool.Where(x => x.Rank != 1 && !x.IsJoker && !x.gameObject.activeInHierarchy).ToList();
+        return copy;
     }
 
     public Card GetCard()
     {
-        for (int i = 0; i < pool.Count; i++)
+        Card found = pool.Find(x => !x.gameObject.activeInHierarchy);
+        if (found != null)
         {
-            Card c = pool[i];
-            if (!c.gameObject.activeInHierarchy)
-            {
-                c.gameObject.SetActive(true);
-                return c;
-            }
+            found.gameObject.SetActive(true);
+            return found;
         }
-        Debug.LogWarning("Card pool esaurito!");
+        Debug.LogWarning("CardPoolManager: pool esaurito");
         return null;
     }
 
     public void ReturnCard(Card card)
     {
+        if (card == null) return;
         card.ResetCard();
+    }
+
+    public Transform GetPoolParent()
+    {
+        return poolParent;
     }
 }

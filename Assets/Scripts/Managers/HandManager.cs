@@ -24,7 +24,6 @@ public class HandManager : MonoBehaviour
     public void AddCardToPlayer(Card card)
     {
         if (card == null) return;
-
         PlayerHand.Add(card);
         ArrangeHand(PlayerHand, playerHandZone, true);
     }
@@ -32,7 +31,6 @@ public class HandManager : MonoBehaviour
     public void AddCardToAI(Card card)
     {
         if (card == null) return;
-
         AIHand.Add(card);
         ArrangeHand(AIHand, aiHandZone, false);
     }
@@ -68,6 +66,7 @@ public class HandManager : MonoBehaviour
         if (hand == null || hand.Count == 0) return;
 
         float centerIndex = (hand.Count - 1) / 2f;
+        if (centerIndex < 1f) centerIndex = 1f;
 
         for (int i = 0; i < hand.Count; i++)
         {
@@ -83,18 +82,18 @@ public class HandManager : MonoBehaviour
             offsetY = Mathf.Clamp(offsetY, 0, maxYOffset);
 
             if (!isPlayer)
-            {
                 offsetY = maxYOffset - offsetY;
-            }
 
             c.transform.localPosition = new Vector3(offsetX, offsetY, 0);
             c.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
-
             c.Flip(isPlayer);
 
             CardDragHandler dragHandler = c.GetComponent<CardDragHandler>();
             if (dragHandler != null)
-                dragHandler.SetDraggable(true);
+            {
+                dragHandler.SetDraggable(isPlayer);
+                dragHandler.SetOrigin(isPlayer, false);
+            }
         }
     }
 }

@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class PlayFieldSlot : MonoBehaviour
 {
-    private List<Card> cards = new List<Card>();
+    List<Card> cards = new List<Card>();
+    bool facingPlayer;
 
     public string Suit
     {
@@ -15,14 +16,15 @@ public class PlayFieldSlot : MonoBehaviour
         }
     }
 
-    public void InitSlotWithAce(Card ace, bool isFacingPlayer = true)
+    public void InitSlotWithAce(Card ace, bool facePlayer)
     {
-        if (ace == null) return;
+        cards.Clear();
+        facingPlayer = facePlayer;
         cards.Add(ace);
         ace.Flip(true);
         ace.transform.SetParent(transform, false);
-        ace.transform.localScale = new Vector3(1, isFacingPlayer ? 1 : -1, 1);
         ace.transform.localPosition = Vector3.zero;
+        ace.transform.localRotation = facePlayer ? Quaternion.identity : Quaternion.Euler(0, 0, 180);
     }
 
     public bool CanPlace(Card card)
@@ -31,40 +33,23 @@ public class PlayFieldSlot : MonoBehaviour
             return card.Rank == 1 || card.IsJoker;
 
         Card top = cards[cards.Count - 1];
-
-        if (top.IsJoker)
-        {
-            int nextPlus = GetNextExpectedRank(top, +1);
-            int nextMinus = GetNextExpectedRank(top, -1);
-            if (card.Rank == nextPlus || card.Rank == nextMinus)
-                return true;
-        }
-
-        if (card.IsJoker)
-            return true;
-
-        if (card.Suit != Suit)
-            return false;
-
+        if (card.IsJoker) return true;
+        if (top.IsJoker) return true;
+        if (card.Suit != Suit) return false;
         return card.Rank == top.Rank + 1;
     }
 
-    private int GetNextExpectedRank(Card baseCard, int direction)
-    {
-        int next = baseCard.Rank + direction;
-        return Mathf.Clamp(next, 1, 13);
-    }
-
-    public void PlaceCard(Card card, bool isFacingPlayer = true)
+    public void PlaceCard(Card card, bool fromPlayer)
     {
         cards.Add(card);
         card.transform.SetParent(transform, false);
 
-        float yOffset = cards.Count * 5f;
-        if (!isFacingPlayer) yOffset = -yOffset;
+        float offset = 20f;
+        float direction = facingPlayer ? -1f : 1f;
+        card.transform.localPosition = new Vector3(0, cards.Count * offset * direction, 0);
 
-        card.transform.localPosition = new Vector3(0, yOffset, 0);
-        card.transform.localScale = new Vector3(1, isFacingPlayer ? 1 : -1, 1);
+        bool shouldFacePlayer = facingPlayer ? true : false;
+        card.transform.localRotation = shouldFacePlayer ? Quaternion.identity : Quaternion.Euler(0, 0, 180);
         card.Flip(true);
 
         if (JokerManager.Instance != null)

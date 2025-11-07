@@ -1,31 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] private DeckManager deckManager;
-    [SerializeField] private PlayFieldManager playFieldManager;
-    [SerializeField] private SidePileManager sidePileManager;
-    [SerializeField] private HandManager handManager;
-    [SerializeField] private TurnManager turnManager;
-    [SerializeField] private UIManager uiManager;
+    [SerializeField] DeckManager deckManager;
+    [SerializeField] PlayFieldManager playFieldManager;
+    [SerializeField] SidePileManager sidePileManager;
+    [SerializeField] HandManager handManager;
+    [SerializeField] UIManager uiManager;
 
     public enum GameState { None, Setup, ChoosingPile, PlayerTurn, EnemyTurn, GameOver }
     public GameState CurrentState { get; private set; } = GameState.None;
 
-    private void Awake()
+    void Awake()
     {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
     }
 
-    private void Start()
+    void Start()
     {
         uiManager.ShowMainMenu();
     }
@@ -34,9 +30,7 @@ public class GameManager : MonoBehaviour
     {
         CurrentState = GameState.Setup;
         uiManager.ShowCardsCanvas();
-
-        Debug.Log("GameManager: inizializzazione mazzo e preparazione mazzetti...");
-        deckManager.SetupDeck(); 
+        deckManager.SetupDeck();
         CurrentState = GameState.ChoosingPile;
     }
 
@@ -55,36 +49,50 @@ public class GameManager : MonoBehaviour
 
     public void EndPlayerTurn()
     {
+        if (sidePileManager.IsPlayerPileEmpty())
+        {
+            EndGame(true);
+            return;
+        }
         CurrentState = GameState.EnemyTurn;
-        turnManager.StartEnemyTurn();
+        TurnManager.Instance.StartEnemyTurn();
     }
 
-    public void EndEnemyTurn()
+    public void EndEnemyTurn(bool revealNext)
     {
+        if (sidePileManager.IsAIPileEmpty())
+        {
+            EndGame(false);
+            return;
+        }
         CurrentState = GameState.PlayerTurn;
-        turnManager.StartTurns();
+        TurnManager.Instance.StartPlayerTurn();
     }
 
     public void EndGame(bool playerWon)
     {
         CurrentState = GameState.GameOver;
-
-        if (playerWon)
-            uiManager.OnGameWon();
-        else
-            uiManager.OnGameLost();
+        if (playerWon) uiManager.OnGameWon();
+        else uiManager.OnGameLost();
     }
 
     public void OnPlayerDiscardLastCard()
     {
-        sidePileManager.RevealPlayerTop();
+        TurnManager.Instance.NotifyDiscardedLastCard(true);
     }
 
     public void OnPlayerPlayedPileCard()
     {
-        sidePileManager.OnPlayerCardPlayedFromPile();
+        TurnManager.Instance.NotifyPlayedLastCardToField(true);
+    }
 
-        if (sidePileManager.IsPlayerPileEmpty())
-            EndGame(true);
+    public void OnAIDiscardLastCard()
+    {
+        TurnManager.Instance.NotifyDiscardedLastCard(false);
+    }
+
+    public void OnAIPlayedPileCard()
+    {
+        TurnManager.Instance.NotifyPlayedLastCardToField(false);
     }
 }

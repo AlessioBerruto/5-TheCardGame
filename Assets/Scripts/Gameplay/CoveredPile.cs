@@ -1,63 +1,84 @@
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic;
 
 public class CoveredPile : MonoBehaviour
 {
-    private Stack<Card> cards = new Stack<Card>();
+    [SerializeField] bool isMainDeck;
+    [SerializeField] bool isPlayerPile;
 
-    public void InitPile(List<Card> cardsList)
+    List<Card> pile = new List<Card>();
+    Card revealedTop;
+
+    public int Count => pile.Count;
+    public bool IsEmpty => pile.Count == 0;
+
+    public void InitPile(List<Card> cards)
     {
         ClearPile();
-
-        foreach (Card c in cardsList)
+        pile.AddRange(cards);
+        for (int i = 0; i < pile.Count; i++)
         {
-            AddCard(c, false);
+            Card c = pile[i];
+            c.gameObject.SetActive(true);
+            c.transform.SetParent(transform, false);
+            c.transform.localScale = Vector3.one;
+            c.transform.localRotation = Quaternion.identity;
+            c.transform.localPosition = new Vector3(0, i * 2f, 0);
+            c.Flip(false);
         }
-    }
-
-    public void AddCard(Card card, bool faceUp = false)
-    {
-        if (card == null) return;
-
-        card.transform.SetParent(transform, false);
-        card.transform.localPosition = new Vector3(0, cards.Count * 2f, 0);
-        card.Flip(faceUp);
-        card.gameObject.SetActive(true);
-        cards.Push(card);
-    }
-
-    public Card DrawTopCard()
-    {
-        if (cards.Count == 0)
-            return null;
-
-        return cards.Pop();
+        if (!isMainDeck && pile.Count > 0)
+        {
+            revealedTop = null;
+            pile[pile.Count - 1].gameObject.SetActive(true);
+        }
     }
 
     public void RevealTopCard()
     {
-        if (cards.Count == 0)
-            return;
+        if (pile.Count == 0) return;
 
-        Card top = cards.Peek();
-        top.Flip(true);
+        if (revealedTop != null && pile.Contains(revealedTop))
+            pile.Remove(revealedTop);
 
-        CardDragHandler dragHandler = top.GetComponent<CardDragHandler>();
-        if (dragHandler != null)
-            dragHandler.SetDraggable(true);
+        revealedTop = pile[pile.Count - 1];
+        revealedTop.Flip(true);
+        revealedTop.transform.SetParent(transform, false);
+        revealedTop.transform.localScale = Vector3.one;
+
+        if (isPlayerPile)
+            revealedTop.transform.localRotation = Quaternion.identity;          
+        else
+            revealedTop.transform.localRotation = Quaternion.Euler(0, 0, 180);  
+
+        revealedTop.transform.localPosition = Vector3.zero;
+        revealedTop.gameObject.SetActive(true);
     }
 
-    public int Count => cards.Count;
+
+    public Card DrawTopCard()
+    {
+        if (pile.Count == 0) return null;
+        Card c = pile[pile.Count - 1];
+        pile.RemoveAt(pile.Count - 1);
+        revealedTop = pile.Count > 0 ? pile[pile.Count - 1] : null;
+        if (revealedTop != null)
+        {
+            revealedTop.Flip(true);
+            revealedTop.transform.localScale = Vector3.one;
+            revealedTop.transform.localRotation = isPlayerPile ? Quaternion.identity : Quaternion.Euler(0, 0, 180);
+            revealedTop.transform.localPosition = Vector3.zero;
+            revealedTop.gameObject.SetActive(true);
+        }
+        return c;
+    }
 
     public void ClearPile()
     {
-        while (cards.Count > 0)
+        for (int i = 0; i < pile.Count; i++)
         {
-            Card card = cards.Pop();
-            if (card != null)
-                Destroy(card.gameObject);
+            if (pile[i] != null) Destroy(pile[i].gameObject);
         }
-
-        cards.Clear();
+        pile.Clear();
+        revealedTop = null;
     }
 }

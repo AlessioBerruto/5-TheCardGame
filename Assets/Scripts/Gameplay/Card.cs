@@ -43,9 +43,18 @@ public class Card : MonoBehaviour
     public void ResetCard()
     {
         Flip(false);
-        transform.SetParent(CardPoolManager.Instance.transform);
+        if (CardPoolManager.Instance != null)
+        {
+            Transform pool = CardPoolManager.Instance.GetPoolParent();
+            transform.SetParent(pool, false);
+        }
+        else
+        {
+            transform.SetParent(null, false);
+        }
         gameObject.SetActive(false);
     }
+
 
     public void MoveTo(Vector3 target, float speed = 10f)
     {
